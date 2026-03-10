@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Docs — Billing</title>
+<link rel="stylesheet" href="/css/billing.css">
+<link rel="stylesheet" href="/css/docs.css">
+</head>
+<body>
+<div class="bg-grid"></div>
+<div class="bg-glow"></div>
+<nav class="topnav">
+  <a href="/" class="topnav-logo"><div class="logo-icon"><svg viewBox="0 0 15 15" fill="none"><path d="M7.5 1C4.5 1 2 3.8 2 7c0 2.2 1.1 4 2.8 5.1L7.5 14l2.7-1.9C11.9 11 13 9.2 13 7c0-3.2-2.5-6-5.5-6z" fill="#000"/></svg></div>Billing</a>
+  <div class="topnav-links">
+    <a href="/dashboard.html" class="nav-link" data-page="overview">Overview</a>
+    <a href="/keys.html"      class="nav-link" data-page="keys">API Keys</a>
+    <a href="/usage.html"     class="nav-link" data-page="usage">Usage</a>
+    <a href="/models.html"    class="nav-link" data-page="models">Models</a>
+    <a href="/docs.html"      class="nav-link" data-page="docs">Docs</a>
+    <a href="/logs.html"      class="nav-link" data-page="logs">Logs</a>
+    <a href="/admin.html"     class="nav-link" data-page="admin" id="navAdmin" class="nav-hidden">Admin</a>
+  </div>
+  <div class="topnav-right">
+    <div class="user-pill"><div class="user-avatar" id="navInitial">U</div><span id="navUser">User</span></div>
+    <button class="btn btn-ghost btn-sm" onclick="BillingNav.signOut()">Sign out</button>
+  </div>
+</nav>
+
+<div class="page-wrap page-wrap--docs">
+  <div class="page-hdr fade-up"><div class="page-title">Documentation</div></div>
+
+  <div class="docs-section fade-up delay-1">
+    <h2 class="docs-section-title">Installation</h2>
+    <div class="code-block"><span class="cmt"># Install CLI globally</span>
+cd billing/cli
+npm install
+npm install -g . --force
+
+<span class="cmt"># Verify installation</span>
+billing --help</div>
+  </div>
+
+  <div class="docs-section fade-up delay-2">
+    <h2 class="docs-section-title">Start the proxy</h2>
+    <div class="code-block"><span class="cmt"># With API key from dashboard (recommended)</span>
+billing start --key <span class="key">bill_sk_your_key_here</span>
+
+<span class="cmt"># Or authenticate with email first</span>
+billing login
+billing start</div>
+  </div>
+
+  <div class="docs-section fade-up delay-3">
+    <h2 class="docs-section-title">Connect your AI tool</h2>
+    <div class="code-block"><span class="cmt"># Claude Code</span>
+<span class="key">ANTHROPIC_BASE_URL</span>=<span class="val">http://127.0.0.1:9099</span> claude
+
+<span class="cmt"># Cursor — Settings → Models → Base URL</span>
+<span class="val">http://127.0.0.1:9099</span>
+
+<span class="cmt"># Cline / RooCode — API Base URL setting</span>
+<span class="val">http://127.0.0.1:9099</span>
+
+<span class="cmt"># Windsurf — Cascade → API endpoint</span>
+<span class="val">http://127.0.0.1:9099</span></div>
+  </div>
+
+  <div class="docs-section fade-up delay-4">
+    <h2 class="docs-section-title">All CLI commands</h2>
+    <div class="code-block">billing login                     <span class="cmt"># sign in to your account</span>
+billing start --key bill_sk_...   <span class="cmt"># start proxy with API key</span>
+billing start                     <span class="cmt"># start proxy with session token</span>
+billing stop                      <span class="cmt"># stop the proxy</span>
+billing status                    <span class="cmt"># show proxy status</span>
+billing whoami                    <span class="cmt"># show current user</span>
+billing keys list                 <span class="cmt"># list your API keys</span>
+billing keys create "Name"        <span class="cmt"># create a new API key</span>
+billing skill upgrade             <span class="cmt"># AI skill upgrade (+XP)</span>
+billing logout                    <span class="cmt"># sign out</span></div>
+  </div>
+
+  <div class="docs-section fade-up">
+    <h2 class="docs-section-title">Environment variables (server)</h2>
+    <div class="code-block"><span class="cmt"># .env or shell exports</span>
+<span class="key">ANTHROPIC_API_KEY</span>=sk-ant-...       <span class="cmt"># Anthropic key</span>
+<span class="key">OPENROUTER_API_KEY</span>=sk-or-...      <span class="cmt"># OpenRouter key (free models)</span>
+<span class="key">REQUIRE_APPROVAL</span>=false            <span class="cmt"># disable waitlist (default: true)</span>
+<span class="key">HOURLY_LIMIT</span>=200                  <span class="cmt"># requests per hour per user</span>
+<span class="key">DAILY_LIMIT</span>=1000                  <span class="cmt"># requests per day per user</span>
+<span class="key">PORT</span>=3000                         <span class="cmt"># server port</span></div>
+  </div>
+
+  <div class="docs-section fade-up">
+    <h2 class="docs-section-title">Data collection notice</h2>
+    <div class="card card--notice">
+      <p class="notice-body">
+        Billing collects prompts and completions for benchmarking and AI model training.
+        All data is anonymized. By using this service you agree that your prompts may be
+        used to improve AI models. No personally identifiable information is stored alongside prompt data.
+      </p>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<script src="/css/billing-nav.js"></script>
+<script>BillingNav.init('docs');</script>
+</body>
+</html>

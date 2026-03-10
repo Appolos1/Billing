@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Usage — Billing</title>
+<link rel="stylesheet" href="/css/billing.css">
+<link rel="stylesheet" href="/css/usage.css">
+</head>
+<body>
+<div class="bg-grid"></div>
+<div class="bg-glow"></div>
+<nav class="topnav">
+  <a href="/" class="topnav-logo"><div class="logo-icon"><svg viewBox="0 0 15 15" fill="none"><path d="M7.5 1C4.5 1 2 3.8 2 7c0 2.2 1.1 4 2.8 5.1L7.5 14l2.7-1.9C11.9 11 13 9.2 13 7c0-3.2-2.5-6-5.5-6z" fill="#000"/></svg></div>Billing</a>
+  <div class="topnav-links">
+    <a href="/dashboard.html" class="nav-link" data-page="overview">Overview</a>
+    <a href="/keys.html"      class="nav-link" data-page="keys">API Keys</a>
+    <a href="/usage.html"     class="nav-link" data-page="usage">Usage</a>
+    <a href="/models.html"    class="nav-link" data-page="models">Models</a>
+    <a href="/docs.html"      class="nav-link" data-page="docs">Docs</a>
+    <a href="/logs.html"      class="nav-link" data-page="logs">Logs</a>
+    <a href="/admin.html"     class="nav-link" data-page="admin" id="navAdmin" class="nav-hidden">Admin</a>
+  </div>
+  <div class="topnav-right">
+    <div class="user-pill"><div class="user-avatar" id="navInitial">U</div><span id="navUser">User</span></div>
+    <button class="btn btn-ghost btn-sm" onclick="BillingNav.signOut()">Sign out</button>
+  </div>
+</nav>
+
+<div class="page-wrap">
+  <div class="page-hdr fade-up"><div class="page-title">Usage</div></div>
+
+  <div class="stats-row fade-up delay-1">
+    <div class="stat-card"><div class="stat-num accent" id="u1">—</div><div class="stat-lbl">Total requests</div></div>
+    <div class="stat-card"><div class="stat-num" id="u2">—</div><div class="stat-lbl">Today</div></div>
+    <div class="stat-card"><div class="stat-num" id="u3">—</div><div class="stat-lbl">This week</div></div>
+    <div class="stat-card"><div class="stat-num" id="u4">—</div><div class="stat-lbl">This month</div></div>
+  </div>
+
+  <div class="card card--chart fade-up delay-2">
+    <div class="card-hdr"><div class="card-title">7-day chart</div></div>
+    <div class="chart-bars chart-bars--usage" id="chartBars"></div>
+    <div class="chart-dates" id="chartDates"></div>
+  </div>
+
+  <div class="card fade-up delay-3">
+    <div class="card-hdr"><div class="card-title">Rate limits</div></div>
+    <div class="rate-limits-grid">
+      <div>
+        <div class="section-label">Hourly limit</div>
+        <div class="rate-limit-num rate-limit-num--accent">200 <span class="rate-limit-unit">/ hour</span></div>
+      </div>
+      <div>
+        <div class="section-label">Daily limit</div>
+        <div class="rate-limit-num">1,000 <span class="rate-limit-unit">/ day</span></div>
+      </div>
+      <div>
+        <div class="section-label">Reset</div>
+        <div class="rate-limit-desc">Rolling window.<br>Resets automatically.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<script src="/css/billing-nav.js"></script>
+<script>
+(async () => {
+  const me = await BillingNav.init('usage');
+  if (!me) return;
+  const u = await api('GET', '/api/usage');
+  set('u1', fmt(u.total || 0)); set('u2', fmt(u.today || 0));
+  set('u3', fmt(u.week  || 0)); set('u4', fmt(u.month  || 0));
+  if (u.days) renderChart('chartBars', 'chartDates', u.days);
+})();
+</script>
+</body>
+</html>

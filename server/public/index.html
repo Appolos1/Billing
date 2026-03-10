@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Billing — Free Frontier Coding Models</title>
+<link rel="stylesheet" href="/css/billing.css">
+<link rel="stylesheet" href="/css/index.css">
+</head>
+<body>
+<div class="bg-grid"></div>
+<div class="bg-glow"></div>
+
+<nav class="topnav">
+  <a href="/" class="topnav-logo">
+    <div class="logo-icon"><svg viewBox="0 0 15 15" fill="none"><path d="M7.5 1C4.5 1 2 3.8 2 7c0 2.2 1.1 4 2.8 5.1L7.5 14l2.7-1.9C11.9 11 13 9.2 13 7c0-3.2-2.5-6-5.5-6z" fill="#000"/></svg></div>
+    Billing
+  </a>
+  <div class="topnav-spacer"></div>
+  <div class="topnav-right">
+    <a href="/auth.html" class="btn btn-ghost btn-sm">Sign in</a>
+    <a href="/auth.html" class="btn btn-primary btn-sm">Get started</a>
+  </div>
+</nav>
+
+<section class="landing-hero">
+  <div class="hero-pill fade-up"><span class="hero-pill-dot"></span>Free access to frontier models</div>
+  <h1 class="hero-title fade-up delay-1">Code faster with<br><em>frontier models</em></h1>
+  <p class="hero-desc fade-up delay-2">Route your AI coding requests to Claude, DeepSeek, Llama and more — completely free. Works with Cursor, Cline, Claude Code, Windsurf.</p>
+  <div class="hero-btns fade-up delay-3">
+    <a href="/auth.html" class="btn btn-primary btn-hero">Get started free</a>
+    <a href="/auth.html" class="btn btn-ghost btn-hero">Sign in</a>
+  </div>
+  <div class="terminal fade-up delay-4">
+    <div class="terminal-bar">
+      <div class="terminal-dot terminal-dot--red"></div>
+      <div class="terminal-dot terminal-dot--yellow"></div>
+      <div class="terminal-dot terminal-dot--green"></div>
+    </div>
+    <div class="terminal-body">
+      <div><span class="t-prompt">$ </span><span class="t-cmd">billing start --key bill_sk_••••••••</span></div>
+      <div><span class="t-out">✓ Authenticated as Alex</span></div>
+      <div><span class="t-out">🟢 Proxy running → http://127.0.0.1:9099</span></div>
+      <div><span class="t-prompt">$ </span><span class="t-cmd">ANTHROPIC_BASE_URL=http://127.0.0.1:9099 claude</span></div>
+      <div><span class="t-out">✓ Connected · Model: lazy-fox (stealth)</span></div>
+      <div><span class="t-prompt">$ </span><span class="t-cursor"></span></div>
+    </div>
+  </div>
+</section>
+
+<div class="landing-features">
+  <div class="feat-grid fade-up">
+    <div class="feat-card">
+      <div class="feat-icon">⇄</div>
+      <h3>Multi-model routing</h3>
+      <p>Routes to Claude, DeepSeek, Llama and more automatically. Real model names hidden in stealth mode.</p>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon">⚡</div>
+      <h3>Works everywhere</h3>
+      <p>Compatible with Cursor, Cline, Claude Code, Windsurf, RooCode. Just set <code class="code-accent">ANTHROPIC_BASE_URL</code>.</p>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon">🔒</div>
+      <h3>Rate limited & fair</h3>
+      <p>200 req/hour per user. Anonymous prompt collection helps improve AI models for everyone.</p>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon">🌐</div>
+      <h3>Full streaming</h3>
+      <p>Real-time streaming responses for all models, just like the official API.</p>
+    </div>
+  </div>
+</div>
+
+<div class="landing-steps">
+  <h2 class="landing-steps-title">Get started in 3 steps</h2>
+  <div class="how-step">
+    <div class="how-step-num">1</div>
+    <div class="how-step-body"><h4>Apply for access</h4><p>Join the waitlist or register directly if approved. No credit card required.</p></div>
+  </div>
+  <div class="how-step">
+    <div class="how-step-num">2</div>
+    <div class="how-step-body"><h4>Get your API key</h4><p>Create a key from the dashboard — starts with <code>bill_sk_...</code></p></div>
+  </div>
+  <div class="how-step">
+    <div class="how-step-num">3</div>
+    <div class="how-step-body"><h4>Start coding</h4><p>Run <code>billing start --key bill_sk_...</code> and point your editor to the proxy.</p></div>
+  </div>
+</div>
+
+<footer class="landing-footer">
+  <div class="footer-brand">
+    <div class="logo-icon-sm"><svg viewBox="0 0 15 15" fill="none"><path d="M7.5 1C4.5 1 2 3.8 2 7c0 2.2 1.1 4 2.8 5.1L7.5 14l2.7-1.9C11.9 11 13 9.2 13 7c0-3.2-2.5-6-5.5-6z" fill="#000"/></svg></div>
+    Billing
+  </div>
+  <span>© 2026 Billing. Free access to frontier models.</span>
+</footer>
+
+<script>
+(async () => {
+  const t = localStorage.getItem('bill_token');
+  if (!t) return;
+  try {
+    const r = await fetch('/api/auth/me', { headers: { 'Authorization': 'Bearer ' + t } });
+    const u = await r.json();
+    if (u?.id) window.location.href = '/dashboard.html';
+  } catch {}
+})();
+</script>
+</body>
+</html>

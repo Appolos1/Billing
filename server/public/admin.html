@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin — Billing</title>
+<link rel="stylesheet" href="/css/billing.css">
+<link rel="stylesheet" href="/css/admin.css">
+</head>
+<body>
+<div class="bg-grid"></div>
+<div class="bg-glow"></div>
+<nav class="topnav">
+  <a href="/" class="topnav-logo"><div class="logo-icon"><svg viewBox="0 0 15 15" fill="none"><path d="M7.5 1C4.5 1 2 3.8 2 7c0 2.2 1.1 4 2.8 5.1L7.5 14l2.7-1.9C11.9 11 13 9.2 13 7c0-3.2-2.5-6-5.5-6z" fill="#000"/></svg></div>Billing</a>
+  <div class="topnav-links">
+    <a href="/dashboard.html" class="nav-link" data-page="overview">Overview</a>
+    <a href="/keys.html"      class="nav-link" data-page="keys">API Keys</a>
+    <a href="/usage.html"     class="nav-link" data-page="usage">Usage</a>
+    <a href="/models.html"    class="nav-link" data-page="models">Models</a>
+    <a href="/docs.html"      class="nav-link" data-page="docs">Docs</a>
+    <a href="/logs.html"      class="nav-link" data-page="logs">Logs</a>
+    <a href="/admin.html"     class="nav-link" data-page="admin" id="navAdmin" class="nav-hidden">Admin</a>
+  </div>
+  <div class="topnav-right">
+    <div class="user-pill"><div class="user-avatar" id="navInitial">U</div><span id="navUser">User</span></div>
+    <button class="btn btn-ghost btn-sm" onclick="BillingNav.signOut()">Sign out</button>
+  </div>
+</nav>
+
+<div class="page-wrap" id="adminWrap">
+  <div class="page-hdr fade-up">
+    <div><div class="page-title">Admin</div><div class="page-sub">Server statistics and user management</div></div>
+    <button class="btn btn-ghost btn-sm" onclick="loadAll()">↻ Refresh</button>
+  </div>
+
+  <div class="stats-row fade-up delay-1" id="admStats">
+    <div class="stat-card"><div class="stat-num">—</div><div class="stat-lbl">Loading...</div></div>
+  </div>
+
+  <div class="card card--admin fade-up delay-2">
+    <div class="card-hdr">
+      <div class="card-title">Waitlist</div>
+      <span class="admin-count" id="wlBadge"></span>
+    </div>
+    <div id="wlTable"><div class="admin-empty">Loading...</div></div>
+  </div>
+
+  <div class="card card--admin fade-up delay-3">
+    <div class="card-hdr"><div class="card-title">All users</div></div>
+    <div id="usersTable"><div class="admin-empty">Loading...</div></div>
+  </div>
+
+  <div class="card fade-up delay-4">
+    <div class="card-hdr"><div class="card-title">Prompt collection — daily breakdown</div></div>
+    <div id="promptTable"><div class="admin-empty">Loading...</div></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<script src="/css/billing-nav.js"></script>
+<script>
+(async () => {
+  const me = await BillingNav.init('admin');
+  if (!me) return;
+  if (me.role !== 'admin') {
+    document.getElementById('adminWrap').innerHTML = `
+      <div class="admin-denied">
+        <div class="admin-denied-icon">🔒</div>
+        <div class="admin-denied-title">Admin access required</div>
+        <div class="admin-denied-sub">Your account does not have admin privileges.</div>
+      </div>`;
+    return;
+  }
+  loadAll();
+})();
+
+async function loadAll() {
+  try {
+    const [stats, wl, users, ps] = await Promise.all([
+      api('GET', '/api/admin/stats'),
+      api('GET', '/api/admin/waitlist'),
+      api('GET', '/api/admin/users'),
+      api('GET', '/api/admin/prompts/stats'),
+    ]);
+    renderStats(stats);
+    renderWaitlist(wl);
+    renderUsers(users);
+    renderPrompts(ps);
+  } catch (e) { toast('Error: ' + e.message); }
+}
+
+function renderStats(s) {
+  if (!s || s.error) return;
+  document.getElementById('admStats').innerHTML = `
+    <div class="stat-card"><div class="stat-num accent">${s.users||0}</div><div class="stat-lbl">Total users</div></div>
+    <div class="stat-card"><div class="stat-num">${s.approved||0}</div><div class="stat-lbl">Approved</div></div>
+    <div class="stat-card"><div class="stat-num">${s.keys||0}</div><div class="stat-lbl">Active keys</div></div>
+    <div class="stat-card"><div class="stat-num">${fmt(s.prompts||0)}</div><div class="stat-lbl">Prompts collected</div></div>
+    <div class="stat-card"><div class="stat-num">${fmt(s.tokens||0)}</div><div class="stat-lbl">Total tokens</div></div>
+    <div class="stat-card"><div class="stat-num">${s.waitlist||0}</div><div class="stat-lbl">Pending waitlist</div></div>`;
+}
+
+function renderWaitlist(wl) {
+  const el = document.getElementById('wlTable');
+  document.getElementById('wlBadge').textContent = Array.isArray(wl) ? wl.length + ' entries' : '';
+  if (!Array.isArray(wl) || !wl.length) { el.innerHTML = '<div class="admin-empty">No waitlist entries</div>'; return; }
+  el.innerHTML = `<div class="table-wrap"><table class="tbl">
+    <thead><tr><th>Name</th><th>Email</th><th>Reason</th><th>Status</th><th>Date</th><th></th></tr></thead>
+    <tbody>${wl.map(w => `<tr>
+      <td class="text">${esc(w.name)}</td>
+      <td>${esc(w.email)}</td>
+      <td class="td--reason">${esc(w.reason || '—')}</td>
+      <td><span class="badge ${w.status==='approved'?'badge-green':w.status==='rejected'?'badge-red':'badge-yellow'}">${w.status}</span></td>
+      <td>${fdate(w.created_at)}</td>
+      <td>${w.status==='pending' ? `<button class="btn btn-primary btn-xs" onclick="approveWl(${w.id},this)">Approve</button>` : ''}</td>
+    </tr>`).join('')}</tbody>
+  </table></div>`;
+}
+
+function renderUsers(users) {
+  const el = document.getElementById('usersTable');
+  if (!Array.isArray(users) || !users.length) { el.innerHTML = '<div class="admin-empty">No users yet</div>'; return; }
+  el.innerHTML = `<div class="table-wrap"><table class="tbl">
+    <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th>Joined</th></tr></thead>
+    <tbody>${users.map(u => `<tr>
+      <td class="text">${esc(u.name)}</td>
+      <td>${esc(u.email)}</td>
+      <td><span class="badge ${u.role==='admin'?'badge-blue':'badge-gray'}">${u.role||'user'}</span></td>
+      <td>${u.approved ? '<span class="status--approved">✓ approved</span>' : '<span class="status--pending">⏳ pending</span>'}</td>
+      <td>${fdate(u.created_at)}</td>
+    </tr>`).join('')}</tbody>
+  </table></div>`;
+}
+
+function renderPrompts(ps) {
+  const el = document.getElementById('promptTable');
+  if (!Array.isArray(ps) || !ps.length) { el.innerHTML = '<div class="admin-empty">No prompt data yet</div>'; return; }
+  el.innerHTML = `<div class="table-wrap"><table class="tbl">
+    <thead><tr><th>Date</th><th>Requests</th><th>Tokens</th></tr></thead>
+    <tbody>${ps.slice(0, 14).map(p => `<tr>
+      <td>${esc(p.date)}</td><td>${p.count||0}</td><td>${fmt(p.tokens||0)}</td>
+    </tr>`).join('')}</tbody>
+  </table></div>`;
+}
+
+async function approveWl(id, btn) {
+  btn.textContent = '...'; btn.disabled = true;
+  try {
+    const r = await api('POST', '/api/admin/waitlist/' + id + '/approve');
+    if (r.ok) { toast('Approved!'); loadAll(); }
+    else { toast(r.error || 'Failed'); btn.textContent = 'Approve'; btn.disabled = false; }
+  } catch (e) { toast('Error: ' + e.message); btn.textContent = 'Approve'; btn.disabled = false; }
+}
+</script>
+</body>
+</html>

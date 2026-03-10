@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>API Keys — Billing</title>
+<link rel="stylesheet" href="/css/billing.css">
+<link rel="stylesheet" href="/css/keys.css">
+</head>
+<body>
+<div class="bg-grid"></div>
+<div class="bg-glow"></div>
+<nav class="topnav">
+  <a href="/" class="topnav-logo"><div class="logo-icon"><svg viewBox="0 0 15 15" fill="none"><path d="M7.5 1C4.5 1 2 3.8 2 7c0 2.2 1.1 4 2.8 5.1L7.5 14l2.7-1.9C11.9 11 13 9.2 13 7c0-3.2-2.5-6-5.5-6z" fill="#000"/></svg></div>Billing</a>
+  <div class="topnav-links">
+    <a href="/dashboard.html" class="nav-link" data-page="overview">Overview</a>
+    <a href="/keys.html"      class="nav-link" data-page="keys">API Keys</a>
+    <a href="/usage.html"     class="nav-link" data-page="usage">Usage</a>
+    <a href="/models.html"    class="nav-link" data-page="models">Models</a>
+    <a href="/docs.html"      class="nav-link" data-page="docs">Docs</a>
+    <a href="/logs.html"      class="nav-link" data-page="logs">Logs</a>
+    <a href="/admin.html"     class="nav-link" data-page="admin" id="navAdmin" class="nav-hidden">Admin</a>
+  </div>
+  <div class="topnav-right">
+    <div class="user-pill"><div class="user-avatar" id="navInitial">U</div><span id="navUser">User</span></div>
+    <button class="btn btn-ghost btn-sm" onclick="BillingNav.signOut()">Sign out</button>
+  </div>
+</nav>
+
+<div class="page-wrap">
+  <div class="page-hdr fade-up">
+    <div>
+      <div class="page-title">API Keys</div>
+      <div class="page-sub">Keys are shown only once on creation — store them securely</div>
+    </div>
+    <button class="btn btn-primary btn-sm" onclick="document.getElementById('keyName').focus()">+ New key</button>
+  </div>
+
+  <div class="card card--create-key fade-up delay-1">
+    <div class="card-hdr"><div class="card-title">Create new key</div></div>
+    <div class="input-row">
+      <input class="input input--key-name" id="keyName" placeholder="Key name (e.g. Cursor, Claude Code...)" onkeydown="if(event.key==='Enter')createKey()">
+      <button class="btn btn-primary btn-sm" onclick="createKey()" id="createBtn">Generate key</button>
+    </div>
+    <div class="key-reveal" id="revealBox">
+      <div class="key-reveal-label">⚠ Copy this key now — it won't be shown again</div>
+      <div class="key-reveal-val" id="revealVal"></div>
+      <div class="flex gap-2 mt-3">
+        <button class="btn btn-secondary btn-sm" onclick="copyReveal()">Copy key</button>
+        <button class="btn btn-ghost btn-sm" onclick="document.getElementById('revealBox').classList.remove('show')">Dismiss</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-label fade-up delay-2">Your keys</div>
+  <div id="keysList" class="fade-up delay-2"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+<script src="/css/billing-nav.js"></script>
+<script>
+(async () => {
+  const me = await BillingNav.init('keys');
+  if (!me) return;
+  loadKeys();
+})();
+
+async function loadKeys() {
+  const keys = await api('GET', '/api/keys');
+  const el = document.getElementById('keysList');
+  if (!Array.isArray(keys) || !keys.length) {
+    el.innerHTML = '<div class="keys-empty">No keys yet — create your first key above</div>';
+    return;
+  }
+  el.innerHTML = keys.map(k => `
+    <div class="key-row">
+      <div class="key-info">
+        <div class="key-name">
+          ${esc(k.name)}
+          <span class="badge ${k.active ? 'badge-green' : 'badge-red'}">
+            <span class="badge-dot"></span>${k.active ? 'active' : 'revoked'}
+          </span>
+        </div>
+        <div class="key-val">${esc(k.key)}</div>
+        <div class="key-meta">${k.requests || 0} requests · Created ${fdate(k.created_at || k.createdAt)}</div>
+      </div>
+      <div class="key-actions">
+        ${k.active ? `<button class="btn btn-ghost btn-xs" onclick="revokeKey('${k.id}')">Revoke</button>` : ''}
+        <button class="btn btn-danger btn-xs" onclick="deleteKey('${k.id}')">Delete</button>
+      </div>
+    </div>`).join('');
+}
+
+async function createKey() {
+  const name = val('keyName') || 'My Key';
+  setBtn('createBtn', 'Generating…');
+  const r = await api('POST', '/api/keys', { name });
+  setBtn('createBtn', 'Generate key');
+  if (r.error) return toast(r.error);
+  document.getElementById('revealVal').textContent = r.key;
+  document.getElementById('revealBox').classList.add('show');
+  document.getElementById('keyName').value = '';
+  toast('Key created — copy it now!');
+  loadKeys();
+}
+
+async function revokeKey(id) {
+  if (!confirm('Revoke this key? It will stop working immediately.')) return;
+  const r = await api('PATCH', `/api/keys/${id}/revoke`);
+  if (r.error) return toast(r.error);
+  toast('Key revoked'); loadKeys();
+}
+
+async function deleteKey(id) {
+  if (!confirm('Delete this key permanently?')) return;
+  const r = await api('DELETE', `/api/keys/${id}`);
+  if (r.error) return toast(r.error);
+  document.getElementById('revealBox').classList.remove('show');
+  toast('Key deleted'); loadKeys();
+}
+
+function copyReveal() {
+  const text = document.getElementById('revealVal').textContent;
+  navigator.clipboard.writeText(text).then(() => toast('Copied to clipboard!')).catch(() => {
+    const el = document.getElementById('revealVal');
+    const range = document.createRange();
+    range.selectNode(el);
+    window.getSelection().removeAllRanges();
+    window.getSelection().addRange(range);
+    document.execCommand('copy');
+    window.getSelection().removeAllRanges();
+    toast('Copied!');
+  });
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Logs — Billing</title>
+<link rel="stylesheet" href="/css/billing.css">
+<link rel="stylesheet" href="/css/logs.css">
+</head>
+<body>
+<div class="bg-grid"></div>
+<div class="bg-glow"></div>
+<nav class="topnav">
+  <a href="/" class="topnav-logo"><div class="logo-icon"><svg viewBox="0 0 15 15" fill="none"><path d="M7.5 1C4.5 1 2 3.8 2 7c0 2.2 1.1 4 2.8 5.1L7.5 14l2.7-1.9C11.9 11 13 9.2 13 7c0-3.2-2.5-6-5.5-6z" fill="#000"/></svg></div>Billing</a>
+  <div class="topnav-links">
+    <a href="/dashboard.html" class="nav-link" data-page="overview">Overview</a>
+    <a href="/keys.html"      class="nav-link" data-page="keys">API Keys</a>
+    <a href="/usage.html"     class="nav-link" data-page="usage">Usage</a>
+    <a href="/models.html"    class="nav-link" data-page="models">Models</a>
+    <a href="/docs.html"      class="nav-link" data-page="docs">Docs</a>
+    <a href="/logs.html"      class="nav-link" data-page="logs">Logs</a>
+    <a href="/admin.html"     class="nav-link" data-page="admin" id="navAdmin" class="nav-hidden">Admin</a>
+  </div>
+  <div class="topnav-right">
+    <div class="user-pill"><div class="user-avatar" id="navInitial">U</div><span id="navUser">User</span></div>
+    <button class="btn btn-ghost btn-sm" onclick="BillingNav.signOut()">Sign out</button>
+  </div>
+</nav>
+
+<div class="page-wrap">
+  <div class="page-hdr fade-up">
+    <div><div class="page-title">Debug Logs</div><div class="page-sub">Last 200 server events</div></div>
+    <div class="logs-controls">
+      <select class="input select--log-type" id="logType">
+        <option value="all">All logs</option>
+        <option value="error">Errors only</option>
+      </select>
+      <button class="btn btn-ghost btn-sm" onclick="loadLogs()">↻ Refresh</button>
+      <button class="btn btn-ghost btn-sm" id="autoBtn" onclick="toggleAuto()">Auto off</button>
+    </div>
+  </div>
+  <div class="log-panel log-panel--logs-page fade-up delay-1" id="logPanel">
+    <span class="log-dim">Loading...</span>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<script src="/css/billing-nav.js"></script>
+<script>
+let autoRefresh = false;
+let autoInterval = null;
+
+(async () => {
+  const me = await BillingNav.init('logs');
+  if (!me) return;
+  await loadLogs();
+  document.getElementById('logType').addEventListener('change', loadLogs);
+})();
+
+async function loadLogs() {
+  const type = document.getElementById('logType').value;
+  try {
+    const r = await api('GET', '/api/logs?type=' + type + '&n=200');
+    const el = document.getElementById('logPanel');
+    if (!r.lines || !r.lines.length) { el.innerHTML = '<span class="log-dim">No logs yet</span>'; return; }
+    el.innerHTML = r.lines.map(l => {
+      const s = String(l);
+      let cls = 'log-dim';
+      if      (s.includes('[ERROR]') || s.includes(' ERROR '))                      cls = 'log-err';
+      else if (s.includes('[WARN]')  || s.includes(' WARN '))                       cls = 'log-warn';
+      else if (s.includes('[OK]')    || s.includes('[AUTH]') || s.includes('[SUCCESS]')) cls = 'log-ok';
+      else if (s.includes('[PROXY]') || s.includes('[INFO]'))                       cls = 'log-req';
+      return '<div class="' + cls + '">' + esc(s) + '</div>';
+    }).join('');
+    el.scrollTop = el.scrollHeight;
+  } catch (e) {
+    document.getElementById('logPanel').innerHTML = '<span class="log-err">Failed to load logs: ' + esc(e.message) + '</span>';
+  }
+}
+
+function toggleAuto() {
+  autoRefresh = !autoRefresh;
+  const btn = document.getElementById('autoBtn');
+  if (autoRefresh) {
+    btn.textContent = 'Auto on';
+    btn.classList.add('btn--auto-on');
+    autoInterval = setInterval(loadLogs, 3000);
+  } else {
+    btn.textContent = 'Auto off';
+    btn.classList.remove('btn--auto-on');
+    clearInterval(autoInterval);
+  }
+}
+</script>
+</body>
+</html>

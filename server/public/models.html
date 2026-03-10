@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Models — Billing</title>
+<link rel="stylesheet" href="/css/billing.css">
+<link rel="stylesheet" href="/css/models.css">
+</head>
+<body>
+<div class="bg-grid"></div>
+<div class="bg-glow"></div>
+<nav class="topnav">
+  <a href="/" class="topnav-logo"><div class="logo-icon"><svg viewBox="0 0 15 15" fill="none"><path d="M7.5 1C4.5 1 2 3.8 2 7c0 2.2 1.1 4 2.8 5.1L7.5 14l2.7-1.9C11.9 11 13 9.2 13 7c0-3.2-2.5-6-5.5-6z" fill="#000"/></svg></div>Billing</a>
+  <div class="topnav-links">
+    <a href="/dashboard.html" class="nav-link" data-page="overview">Overview</a>
+    <a href="/keys.html"      class="nav-link" data-page="keys">API Keys</a>
+    <a href="/usage.html"     class="nav-link" data-page="usage">Usage</a>
+    <a href="/models.html"    class="nav-link" data-page="models">Models</a>
+    <a href="/docs.html"      class="nav-link" data-page="docs">Docs</a>
+    <a href="/logs.html"      class="nav-link" data-page="logs">Logs</a>
+    <a href="/admin.html"     class="nav-link" data-page="admin" id="navAdmin" class="nav-hidden">Admin</a>
+  </div>
+  <div class="topnav-right">
+    <div class="user-pill"><div class="user-avatar" id="navInitial">U</div><span id="navUser">User</span></div>
+    <button class="btn btn-ghost btn-sm" onclick="BillingNav.signOut()">Sign out</button>
+  </div>
+</nav>
+
+<div class="page-wrap">
+  <div class="page-hdr fade-up">
+    <div>
+      <div class="page-title">Models</div>
+      <div class="page-sub">All models served in stealth mode — real names hidden to reduce bias</div>
+    </div>
+  </div>
+  <div class="model-grid fade-up delay-1" id="modelGrid">
+    <div class="models-empty">Loading...</div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<script src="/css/billing-nav.js"></script>
+<script>
+const TAG_CLASS = { Free:'tag-green', Fast:'tag-blue', Powerful:'tag-purple', Coding:'tag-blue', Reasoning:'tag-purple', Cheap:'tag-gray' };
+
+(async () => {
+  const me = await BillingNav.init('models');
+  if (!me) return;
+  const models = await api('GET', '/api/models');
+  const grid = document.getElementById('modelGrid');
+  if (!Array.isArray(models) || !models.length) {
+    grid.innerHTML = '<div class="models-empty">No models available</div>';
+    return;
+  }
+  grid.innerHTML = models.map(m => `
+    <div class="model-card fade-up">
+      <div class="model-name">${esc(m.name)}</div>
+      <div class="model-provider">${esc(m.provider)}</div>
+      <div class="model-tags">${(m.tags || []).map(t => `<span class="tag ${TAG_CLASS[t] || 'tag-gray'}">${esc(t)}</span>`).join('')}</div>
+      <div class="model-stealth">Stealth alias: <span class="model-stealth-name">${esc(m.stealth || '—')}</span></div>
+    </div>`).join('');
+})();
+</script>
+</body>
+</html>

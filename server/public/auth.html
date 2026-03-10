@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sign in — Billing</title>
+<link rel="stylesheet" href="/css/billing.css">
+<link rel="stylesheet" href="/css/auth.css">
+</head>
+<body class="auth-page">
+<div class="bg-grid"></div>
+<div class="bg-glow"></div>
+
+<nav class="topnav">
+  <a href="/" class="topnav-logo">
+    <div class="logo-icon"><svg viewBox="0 0 15 15" fill="none"><path d="M7.5 1C4.5 1 2 3.8 2 7c0 2.2 1.1 4 2.8 5.1L7.5 14l2.7-1.9C11.9 11 13 9.2 13 7c0-3.2-2.5-6-5.5-6z" fill="#000"/></svg></div>
+    Billing
+  </a>
+  <div class="topnav-spacer"></div>
+  <div class="topnav-right">
+    <span class="auth-nav-hint">No account?</span>
+    <button class="btn btn-ghost btn-sm" onclick="switchTab('register')">Register</button>
+  </div>
+</nav>
+
+<div class="auth-wrap">
+  <div class="auth-box">
+    <div class="tab-bar">
+      <button class="tab active" id="t-login"    onclick="switchTab('login')">Sign in</button>
+      <button class="tab"        id="t-register" onclick="switchTab('register')">Register</button>
+      <button class="tab"        id="t-waitlist" onclick="switchTab('waitlist')">Waitlist</button>
+    </div>
+
+    <!-- LOGIN -->
+    <div id="f-login" class="auth-panel active">
+      <div class="auth-title">Welcome back</div>
+      <div class="auth-sub">Sign in to your Billing account</div>
+      <div class="alert" id="loginErr"></div>
+      <div class="field">
+        <label class="field-label">Email address</label>
+        <input class="input" id="lEmail" type="email" placeholder="you@example.com" onkeydown="if(event.key==='Enter')doLogin()">
+      </div>
+      <div class="field">
+        <label class="field-label">Password</label>
+        <input class="input" id="lPass" type="password" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()">
+      </div>
+      <button class="btn btn-primary btn-auth" onclick="doLogin()" id="lBtn">Sign in</button>
+      <p class="auth-note">No account? <a href="#" onclick="switchTab('register');return false">Create one →</a></p>
+    </div>
+
+    <!-- REGISTER -->
+    <div id="f-register" class="auth-panel">
+      <div class="auth-title">Create account</div>
+      <div class="auth-sub">Join Billing for free frontier models</div>
+      <div class="alert" id="regErr"></div>
+      <div class="alert" id="regOk"></div>
+      <div class="field">
+        <label class="field-label">Full name</label>
+        <input class="input" id="rName" placeholder="Your name">
+      </div>
+      <div class="field">
+        <label class="field-label">Email address</label>
+        <input class="input" id="rEmail" type="email" placeholder="you@example.com">
+      </div>
+      <div class="field">
+        <label class="field-label">Password</label>
+        <input class="input" id="rPass" type="password" placeholder="8+ characters">
+      </div>
+      <button class="btn btn-primary btn-auth" onclick="doRegister()" id="rBtn">Create account</button>
+      <p class="auth-note">Requires waitlist approval. <a href="#" onclick="switchTab('waitlist');return false">Join waitlist →</a></p>
+    </div>
+
+    <!-- WAITLIST -->
+    <div id="f-waitlist" class="auth-panel">
+      <div class="auth-title">Join the waitlist</div>
+      <div class="auth-sub">We'll notify you when your access is approved</div>
+      <div class="alert" id="wlErr"></div>
+      <div class="alert" id="wlOk"></div>
+      <div class="field">
+        <label class="field-label">Full name</label>
+        <input class="input" id="wName" placeholder="Your name">
+      </div>
+      <div class="field">
+        <label class="field-label">Email address</label>
+        <input class="input" id="wEmail" type="email" placeholder="you@example.com">
+      </div>
+      <div class="field">
+        <label class="field-label">Why do you want access? <span class="field-label-opt">(optional)</span></label>
+        <textarea class="input" id="wReason" placeholder="I want to use it for..."></textarea>
+      </div>
+      <button class="btn btn-primary btn-auth" onclick="doWaitlist()" id="wBtn">Join waitlist</button>
+      <p class="auth-note">Already have an account? <a href="#" onclick="switchTab('login');return false">Sign in</a></p>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const hash = location.hash.replace('#', '');
+if (['login','register','waitlist'].includes(hash)) switchTab(hash);
+
+function switchTab(t) {
+  ['login','register','waitlist'].forEach(x => {
+    document.getElementById('f-' + x).classList.toggle('active', x === t);
+    document.getElementById('t-' + x).classList.toggle('active', x === t);
+  });
+}
+
+async function req(method, path, body) {
+  const opts = { method, headers: { 'Content-Type': 'application/json' } };
+  const token = localStorage.getItem('bill_token');
+  if (token) opts.headers['Authorization'] = 'Bearer ' + token;
+  if (body) opts.body = JSON.stringify(body);
+  return (await fetch(path, opts)).json();
+}
+
+function showAlert(id, type, msg) {
+  const el = document.getElementById(id);
+  el.textContent = msg;
+  el.className = 'alert' + (msg ? ' alert-' + type + ' show' : '');
+}
+function setBtn(id, txt) {
+  const b = document.getElementById(id);
+  b.textContent = txt; b.disabled = txt.endsWith('…');
+}
+function val(id) { return document.getElementById(id).value.trim(); }
+
+let toastT;
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.classList.add('show');
+  clearTimeout(toastT); toastT = setTimeout(() => el.classList.remove('show'), 2500);
+}
+
+async function doLogin() {
+  const email = val('lEmail'), pass = val('lPass');
+  if (!email || !pass) return showAlert('loginErr', 'err', 'Please fill all fields');
+  setBtn('lBtn', 'Signing in…');
+  try {
+    const r = await req('POST', '/api/auth/login', { email, password: pass });
+    if (r.error) { setBtn('lBtn', 'Sign in'); return showAlert('loginErr', 'err', r.error); }
+    localStorage.setItem('bill_token', r.token);
+    localStorage.setItem('bill_user', JSON.stringify(r.user));
+    window.location.href = '/dashboard.html';
+  } catch { setBtn('lBtn', 'Sign in'); showAlert('loginErr', 'err', 'Connection error. Is the server running?'); }
+}
+
+async function doRegister() {
+  const name = val('rName'), email = val('rEmail'), pass = val('rPass');
+  if (!name || !email || !pass) return showAlert('regErr', 'err', 'Please fill all fields');
+  if (pass.length < 8) return showAlert('regErr', 'err', 'Password must be 8+ characters');
+  setBtn('rBtn', 'Creating…');
+  try {
+    const r = await req('POST', '/api/auth/register', { name, email, password: pass });
+    if (r.error) {
+      setBtn('rBtn', 'Create account');
+      return r.waitlist
+        ? showAlert('regOk', 'ok', 'Join the waitlist first — click the Waitlist tab above.')
+        : showAlert('regErr', 'err', r.error);
+    }
+    localStorage.setItem('bill_token', r.token);
+    localStorage.setItem('bill_user', JSON.stringify(r.user));
+    window.location.href = '/dashboard.html';
+  } catch { setBtn('rBtn', 'Create account'); showAlert('regErr', 'err', 'Connection error'); }
+}
+
+async function doWaitlist() {
+  const name = val('wName'), email = val('wEmail'), reason = val('wReason');
+  if (!name || !email) return showAlert('wlErr', 'err', 'Name and email required');
+  setBtn('wBtn', 'Joining…');
+  try {
+    const r = await req('POST', '/api/waitlist', { name, email, reason });
+    setBtn('wBtn', 'Join waitlist');
+    if (r.error) return showAlert('wlErr', 'err', r.error);
+    showAlert('wlOk', 'ok', "✓ You're on the waitlist! We'll notify you when approved.");
+    ['wName','wEmail','wReason'].forEach(id => document.getElementById(id).value = '');
+  } catch { setBtn('wBtn', 'Join waitlist'); showAlert('wlErr', 'err', 'Connection error'); }
+}
+
+(async () => {
+  const t = localStorage.getItem('bill_token');
+  if (!t) return;
+  try {
+    const r = await req('GET', '/api/auth/me');
+    if (r?.id) window.location.href = '/dashboard.html';
+  } catch {}
+})();
+</script>
+</body>
+</html>

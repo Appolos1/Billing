@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Overview — Billing</title>
+<link rel="stylesheet" href="/css/billing.css">
+<link rel="stylesheet" href="/css/dashboard.css">
+</head>
+<body>
+<div class="bg-grid"></div>
+<div class="bg-glow"></div>
+<nav class="topnav">
+  <a href="/" class="topnav-logo"><div class="logo-icon"><svg viewBox="0 0 15 15" fill="none"><path d="M7.5 1C4.5 1 2 3.8 2 7c0 2.2 1.1 4 2.8 5.1L7.5 14l2.7-1.9C11.9 11 13 9.2 13 7c0-3.2-2.5-6-5.5-6z" fill="#000"/></svg></div>Billing</a>
+  <div class="topnav-links">
+    <a href="/dashboard.html" class="nav-link" data-page="overview">Overview</a>
+    <a href="/keys.html"      class="nav-link" data-page="keys">API Keys</a>
+    <a href="/usage.html"     class="nav-link" data-page="usage">Usage</a>
+    <a href="/models.html"    class="nav-link" data-page="models">Models</a>
+    <a href="/docs.html"      class="nav-link" data-page="docs">Docs</a>
+    <a href="/logs.html"      class="nav-link" data-page="logs">Logs</a>
+    <a href="/admin.html"     class="nav-link" data-page="admin" id="navAdmin" class="nav-hidden">Admin</a>
+  </div>
+  <div class="topnav-right">
+    <div class="user-pill"><div class="user-avatar" id="navInitial">U</div><span id="navUser">User</span></div>
+    <button class="btn btn-ghost btn-sm" onclick="BillingNav.signOut()">Sign out</button>
+  </div>
+</nav>
+
+<div class="page-wrap">
+  <div class="page-hdr fade-up">
+    <div>
+      <div class="page-title" id="greeting">Loading...</div>
+      <div class="page-sub">Here's your account overview</div>
+    </div>
+  </div>
+
+  <div class="stats-row fade-up delay-1">
+    <div class="stat-card"><div class="stat-num accent" id="s1">—</div><div class="stat-lbl">Total requests</div><div class="stat-sub" id="s1s"></div></div>
+    <div class="stat-card"><div class="stat-num" id="s2">—</div><div class="stat-lbl">Active keys</div></div>
+    <div class="stat-card"><div class="stat-num" id="s3">—</div><div class="stat-lbl">This week</div></div>
+    <div class="stat-card"><div class="stat-num" id="s4">—</div><div class="stat-lbl">This month</div></div>
+  </div>
+
+  <div class="card fade-up delay-2">
+    <div class="card-hdr"><div class="card-title">7-day activity</div></div>
+    <div class="chart-bars chart-bars--dashboard" id="chartBars"></div>
+    <div class="chart-dates" id="chartDates"></div>
+  </div>
+
+  <div class="card card--quickstart fade-up delay-3">
+    <div class="card-hdr"><div class="card-title">Quick start</div></div>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body"><h4>Create an API key</h4><p>Go to <a href="/keys.html">API Keys</a> and generate a key starting with <code>bill_sk_</code></p></div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body"><h4>Install CLI</h4><p><code>cd billing/cli && npm install && npm install -g . --force</code></p></div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body"><h4>Start proxy</h4><p><code>billing start --key bill_sk_...</code></p></div>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body"><h4>Connect your editor</h4><p><code>ANTHROPIC_BASE_URL=http://127.0.0.1:9099</code></p></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<script src="/css/billing-nav.js"></script>
+<script>
+(async () => {
+  const me = await BillingNav.init('overview');
+  if (!me) return;
+  const hr = new Date().getHours();
+  document.getElementById('greeting').textContent =
+    (hr < 12 ? 'Good morning' : hr < 18 ? 'Good afternoon' : 'Good evening') + ', ' + me.name;
+  const [usage, keys] = await Promise.all([api('GET', '/api/usage'), api('GET', '/api/keys')]);
+  set('s1', fmt(usage.total || 0));
+  set('s1s', '+' + fmt(usage.today || 0) + ' today');
+  set('s2', Array.isArray(keys) ? keys.filter(k => k.active).length : 0);
+  set('s3', fmt(usage.week || 0));
+  set('s4', fmt(usage.month || 0));
+  if (usage.days) renderChart('chartBars', 'chartDates', usage.days);
+})();
+</script>
+</body>
+</html>
