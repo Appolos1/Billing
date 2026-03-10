@@ -1,0 +1,27 @@
+/* ═══════════════════════════════════════════════════════
+   logs.css — Debug Logs page
+   Depends on: billing.css
+═══════════════════════════════════════════════════════ */
+
+/* ── Taller log panel for this page ─────────────────── */
+.log-panel--logs-page {
+  height: 460px;
+}
+
+/* ── Auto-refresh button active state ───────────────── */
+.btn--auto-on {
+  color: var(--green);
+}
+
+/* ── Controls bar (filter select + buttons) ─────────── */
+.logs-controls {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.select--log-type {
+  width: auto;
+  padding: 6px 12px;
+  font-size: 12px;
+}
