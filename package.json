@@ -1,0 +1,11 @@
+{
+  "name": "billing",
+  "version": "2.0.0",
+  "description": "Billing — Free frontier coding models proxy",
+  "private": true,
+  "scripts": {
+    "server": "cd server && node index.js",
+    "install:server": "cd server && npm install",
+    "install:cli": "cd cli && npm install && npm install -g . --force"
+  }
+}
