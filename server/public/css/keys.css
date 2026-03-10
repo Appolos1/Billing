@@ -1,0 +1,22 @@
+/* ═══════════════════════════════════════════════════════
+   keys.css — API Keys page
+   Depends on: billing.css
+═══════════════════════════════════════════════════════ */
+
+/* ── Create-key card ────────────────────────────────── */
+.card--create-key {
+  margin-bottom: 14px;
+}
+
+/* ── Key name input max-width ───────────────────────── */
+.input--key-name {
+  max-width: 360px;
+}
+
+/* ── Empty state ────────────────────────────────────── */
+.keys-empty {
+  text-align: center;
+  padding: 52px 24px;
+  color: var(--text3);
+  font-size: 13px;
+}

@@ -1,0 +1,46 @@
+/* ═══════════════════════════════════════════════════════
+   admin.css — Admin panel
+   Depends on: billing.css
+═══════════════════════════════════════════════════════ */
+
+/* ── Card spacing ───────────────────────────────────── */
+.card--admin {
+  margin-bottom: 12px;
+}
+
+/* ── Entry count badge next to card title ───────────── */
+.admin-count {
+  font-size: 11px;
+  font-family: var(--mono);
+  color: var(--text3);
+}
+
+/* ── Truncated reason cell in waitlist table ────────── */
+.td--reason {
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text2);
+}
+
+/* ── Approved indicator ─────────────────────────────── */
+.status--approved { color: var(--green); font-size: 12px; }
+.status--pending  { color: var(--yellow); font-size: 12px; }
+.status--rejected { color: var(--red); font-size: 12px; }
+
+/* ── Access-denied screen ───────────────────────────── */
+.admin-denied {
+  text-align: center;
+  padding: 100px 24px;
+}
+.admin-denied-icon  { font-size: 32px; margin-bottom: 16px; }
+.admin-denied-title { font-size: 16px; font-weight: 600; margin-bottom: 8px; }
+.admin-denied-sub   { font-size: 13px; color: var(--text2); }
+
+/* ── Empty state inside tables ──────────────────────── */
+.admin-empty {
+  color: var(--text3);
+  font-size: 13px;
+  padding: 8px 0;
+}

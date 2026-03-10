@@ -1,0 +1,33 @@
+/* ═══════════════════════════════════════════════════════
+   docs.css — Documentation page
+   Depends on: billing.css
+═══════════════════════════════════════════════════════ */
+
+/* ── Narrower content column ────────────────────────── */
+.page-wrap--docs {
+  max-width: 780px;
+}
+
+/* ── Section heading ────────────────────────────────── */
+.docs-section {
+  margin-bottom: 32px;
+}
+
+.docs-section-title {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 14px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border);
+}
+
+/* ── Data-collection notice card ────────────────────── */
+.card--notice {
+  border-color: rgba(34, 197, 94, 0.12);
+}
+
+.notice-body {
+  font-size: 13px;
+  color: var(--text2);
+  line-height: 1.8;
+}

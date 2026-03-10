@@ -1,0 +1,16 @@
+/* ═══════════════════════════════════════════════════════
+   models.css — Models page
+   Depends on: billing.css
+═══════════════════════════════════════════════════════ */
+
+/* ── Stealth alias accent colour ────────────────────── */
+.model-stealth-name {
+  color: var(--green);
+}
+
+/* ── Empty / loading state ──────────────────────────── */
+.models-empty {
+  color: var(--text3);
+  font-size: 13px;
+  padding: 40px 0;
+}
