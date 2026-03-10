@@ -1,0 +1,13 @@
+{
+  "name": "@your-name/billing-cli",
+  "version": "2.0.0",
+  "description": "🧾 Billing CLI — free frontier coding models",
+  "main": "bin/billing.js",
+  "bin": {
+    "billing": "./bin/billing.js"
+  },
+  "dependencies": {
+    "commander": "^11.0.0",
+    "node-fetch": "^2.7.0"
+  }
+}
